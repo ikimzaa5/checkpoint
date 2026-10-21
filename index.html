@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beauty.Diamond</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-image: url('https://obs-ect.line-scdn.net/r/ect/ect/image_1687832748282140295b57a3047t11d66f9c');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    * {
+      font-family: 'Prompt', sans-serif;
+    }
+    .dice {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(240,240,240,0.8));
+      border: 3px solid #4b5eAa;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px auto;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .dice:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .dice::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%); }
+      50% { transform: translateX(100%) translateY(100%); }
+      100% { transform: translateX(-100%) translateY(-100%); }
+    }
+    .dice-gif {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+    .profile-pic {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin-right: 12px;
+      border: 2px solid #4b5eAa;
+      transition: transform 0.3s ease;
+    }
+    .profile-pic:hover {
+      transform: rotate(360deg);
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+    }
+    .input-field {
+      transition: all 0.3s ease;
+    }
+    .input-field:focus {
+      border-color: #4b5eAa;
+      box-shadow: 0 0 0 3px rgba(75, 94, 170, 0.2);
+      transform: scale(1.02);
+    }
+    .btn {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+    .btn:not(:disabled):hover::after {
+      width: 200%;
+      height: 200%;
+    }
+    .btn:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(75, 94, 170, 0.3);
+    }
+    /* Loading Animation Styles */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .loader {
+      width: 60px;
+      height: 60px;
+      border: 6px solid transparent;
+      border-top: 6px solid #4b5eAa;
+      border-right: 6px solid #8b5cf6;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite, pulse 1.5s infinite;
+      position: relative;
+    }
+    .loader::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      right: 5px;
+      bottom: 5px;
+      border-radius: 50%;
+      border: 3px dashed #ffffff;
+      opacity: 0.7;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+  <div class="container p-8 w-full max-w-md text-center">
+    <h1 class="text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+      Beauty.Diamond
+    </h1>
+    <p class="mb-6 text-gray-700 text-lg font-medium">เปิดกล่องจุ่มเพื่อลุ้นรางวัลกับเรา!</p>
+    <h1 id="msg" class="text-blue-500 mb-6 font-medium"></h1>
+
+    <div class="flex justify-center items-center mb-6 bg-gray-50 p-3 rounded-full shadow-sm">
+      <img id="profilePic" class="profile-pic" src="" alt="Profile Picture">
+      <span id="lineName" class="text-xl font-semibold text-gray-800"></span>
+    </div>
+
+    <div class="dice" id="dice">
+      <img src="https://cdn.pixabay.com/animation/2023/11/29/03/39/03-39-03-19_512.gif" class="dice-gif" alt="Dice Animation">
+    </div>
+
+    <form class="space-y-6" id="gameForm">
+      <input type="text" name="name" id="nameInput" placeholder="ชื่อของคุณ"
+             class="input-field w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-gray-700" readonly required>
+      <input type="text" name="question1" placeholder="สินค้าของ Beauty.Diamond มีอะไรบ้าง?"
+             class="input-field w-full p-4 border border-gray-300 rounded-lg focus:outline-none" required>
+      <input type="text" name="question2" placeholder="คุณเคยซื้ออะไรจากเราบ้าง?"
+             class="input-field w-full p-4 border border-gray-300 rounded-lg focus:outline-none" required>
+      <input type="hidden" name="prize" id="prize">
+      <input type="hidden" name="userId" id="userId">
+      <input type="submit" id="sub" value="ทอยลูกเต๋า!"
+             class="btn w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-lg font-semibold" disabled>
+    </form>
+
+    <p id="result" class="text-center text-green-600 font-bold mt-6 text-lg"></p>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    const GS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw3n9B7_2xK88hKgW6UyNpw1fUX7b_WpLaS4_uBLo4l2ZoGPjL33Z8AttLL4H_bZqaE/exec';
+    const LIFF_ID = "2011838467-eY5ZWPJe";
+
+    let prizes = [];
+    let userId = '';
+
+    async function main() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          userId = profile.userId;
+          document.getElementById('profilePic').src = profile.pictureUrl;
+          document.getElementById('lineName').textContent = profile.displayName;
+          document.getElementById('nameInput').value = profile.displayName;
+          document.getElementById('userId').value = userId;
+
+          const hasPlayed = await checkUserPlayed(userId);
+          if (hasPlayed) {
+            await Swal.fire({
+              title: 'ขออภัยค่ะ',
+              html: '<p class="text-lg font-medium">คุณได้ร่วมสนุกไปแล้วนะคะ<br>ขอบคุณที่เข้าร่วมกิจกรรมกับ Beauty.Diamond ค่ะ!</p>',
+              icon: 'warning',
+              confirmButtonText: 'ตกลง',
+              customClass: {
+                popup: 'animated bounceIn rounded-xl',
+                title: 'text-2xl font-bold text-yellow-600',
+                confirmButton: 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-2 px-6 rounded-lg'
+              },
+              buttonsStyling: false,
+              background: '#fff8e1',
+              showCloseButton: true,
+              timer: 5000,
+              timerProgressBar: true,
+              backdrop: 'rgba(0,0,0,0.4)'
+            });
+            liff.closeWindow();
+            return;
+          }
+        } else {
+          liff.login();
+        }
+
+        const response = await fetch(GS_WEB_APP_URL);
+        prizes = (await response.json()).filter(prize => prize.count > 0);
+      } catch (error) {
+        console.error('Error initializing:', error);
+        document.getElementById('msg').textContent = 'เกิดข้อผิดพลาดในการโหลดกิจกรรม';
+      }
+
+      // Form validation setup
+      const form = document.getElementById('gameForm');
+      const submitButton = document.getElementById('sub');
+      const inputs = form.querySelectorAll('input:not([type="hidden"])');
+
+      function checkFormValidity() {
+        const allFilled = Array.from(inputs).every(input => input.value.trim() !== '');
+        submitButton.disabled = !allFilled;
+      }
+
+      inputs.forEach(input => {
+        input.addEventListener('input', checkFormValidity);
+      });
+
+      // Initial check
+      checkFormValidity();
+    }
+    main();
+
+    const form = document.getElementById("gameForm");
+    let isRolling = false;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isRolling) return;
+
+      const playerName = document.getElementById('nameInput').value;
+      const question1 = document.querySelector('input[name="question1"]').value;
+      const question2 = document.querySelector('input[name="question2"]').value;
+      const result = document.getElementById('result');
+
+      if (!playerName) {
+        result.textContent = "กรุณาใส่ชื่อของคุณ!";
+        return;
+      }
+
+      isRolling = true;
+      document.getElementById("sub").value = "กำลังจับรางวัล..";
+      document.getElementById("sub").disabled = true;
+      result.textContent = "";
+
+      const dice = document.getElementById('dice');
+      let rolls = 0;
+      const rollInterval = setInterval(() => {
+        dice.innerHTML = Math.floor(Math.random() * prizes.length) + 1;
+        rolls++;
+        if (rolls > 10) {
+          clearInterval(rollInterval);
+          const diceRoll = Math.floor(Math.random() * prizes.length);
+          dice.innerHTML = diceRoll + 1;
+
+          setTimeout(async () => {
+            const prize = prizes[diceRoll];
+            if (!prize || prize.count <= 0) {
+              Swal.fire({
+                title: 'ขออภัยค่ะ',
+                text: 'รางวัลหมดแล้ว!',
+                icon: 'error',
+                confirmButtonText: 'ตกลง',
+                customClass: {
+                  confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg'
+                },
+                buttonsStyling: false
+              });
+              resetGame();
+              isRolling = false;
+              return;
+            }
+
+            Swal.fire({
+              title: 'ยินดีด้วยค่ะ!',
+              html: `<p class="text-lg">${playerName}, คุณได้รับรางวัล:<br><span class="font-bold text-xl text-green-600">${prize.name}</span></p>`,
+              icon: 'success',
+              confirmButtonText: 'ตกลง',
+              customClass: {
+                confirmButton: 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-2 px-6 rounded-lg'
+              },
+              buttonsStyling: false,
+              didOpen: () => {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+              }
+            }).then(async () => {
+              document.getElementById('prize').value = prize.name;
+              document.getElementById('loading-overlay').style.display = 'flex';
+
+              const data = new FormData(form);
+
+              try {
+                const saveResponse = await fetch(GS_WEB_APP_URL, {
+                  method: "POST",
+                  body: new URLSearchParams(data)
+                });
+                const saveResult = await saveResponse.text();
+                document.getElementById("msg").innerHTML = saveResult;
+
+                await sendFlexMessage(
+                  document.getElementById('profilePic').src,
+                  playerName,
+                  prize.name,
+                  question1,
+                  question2
+                );
+
+                await markUserPlayed(userId);
+
+                const prizeResponse = await fetch(GS_WEB_APP_URL);
+                prizes = (await prizeResponse.json()).filter(prize => prize.count > 0);
+
+                isRolling = false;
+                resetGame();
+              } catch (error) {
+                console.error('Error:', error);
+                document.getElementById("msg").innerHTML = "เกิดข้อผิดพลาดในการบันทึก!";
+                document.getElementById("sub").value = "ทอยลูกเต๋า!";
+                isRolling = false;
+                document.getElementById("sub").disabled = false;
+              } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+              }
+            });
+          }, 500);
+        }
+      }, 100);
+    });
+
+    async function checkUserPlayed(userId) {
+      try {
+        const response = await fetch(`${GS_WEB_APP_URL}?action=check&userId=${userId}`);
+        const result = await response.json();
+        return result.hasPlayed;
+      } catch (error) {
+        console.error('Error checking user:', error);
+        return false;
+      }
+    }
+
+    async function markUserPlayed(userId) {
+      try {
+        await fetch(`${GS_WEB_APP_URL}?action=mark&userId=${userId}`, {
+          method: 'POST'
+        });
+      } catch (error) {
+        console.error('Error marking user:', error);
+      }
+    }
+
+    async function sendFlexMessage(pictureUrl, playerName, prize, question1, question2) {
+      const flexMessage = {
+        type: "flex",
+        altText: "🎉 คุณได้รางวัลจาก Beauty.Diamond!",
+        contents: {
+          type: "bubble",
+          hero: {
+            type: "image",
+            url: pictureUrl,
+            size: "full",
+            aspectRatio: "1:1",
+            aspectMode: "cover"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "🎉 ยินดีด้วยค่ะ!",
+                weight: "bold",
+                size: "xl",
+                color: "#1DB446"
+              },
+              {
+                type: "text",
+                text: `${playerName}, คุณได้รับ:`,
+                size: "md",
+                color: "#666666",
+                margin: "md"
+              },
+              {
+                type: "text",
+                text: prize,
+                size: "lg",
+                weight: "bold",
+                color: "#000000",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: "คำถาม: สินค้าของ Beauty.Diamond มีอะไรบ้าง?",
+                size: "sm",
+                color: "#888888",
+                margin: "md",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `คำตอบ: ${question1}`,
+                size: "sm",
+                color: "#444444",
+                margin: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: "คำถาม: คุณเคยซื้ออะไรจากเราบ้าง?",
+                size: "sm",
+                color: "#888888",
+                margin: "md",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `คำตอบ: ${question2}`,
+                size: "sm",
+                color: "#444444",
+                margin: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: "จาก Beauty.Diamond",
+                size: "sm",
+                color: "#888888",
+                margin: "md"
+              }
+            ],
+            spacing: "sm",
+            paddingAll: "lg"
+          }
+        }
+      };
+
+      try {
+        await liff.sendMessages([flexMessage]);
+        liff.closeWindow();
+        console.log('Flex message sent successfully');
+      } catch (error) {
+        console.error('Failed to send Flex message:', error);
+        throw error;
+      }
+    }
+
+    function resetGame() {
+      const dice = document.getElementById('dice');
+      dice.innerHTML = '<img src="https://cdn.pixabay.com/animation/2023/11/29/03/39/03-39-03-19_512.gif" class="dice-gif" alt="Dice Animation">';
+      form.reset();
+      document.getElementById('result').textContent = '';
+      document.getElementById('msg').textContent = '';
+      document.getElementById('nameInput').value = document.getElementById('lineName').textContent;
+      document.getElementById('userId').value = userId;
+      document.getElementById('sub').disabled = true;
+    }
+  </script>
+</body>
+</html>
